@@ -10,8 +10,10 @@ PROJECT(${PROJECT_NAME} CXX)
 # SET(CMAKE_CXX_STANDARD 17)
 
 #indicate the entry point for the executable
+set(SOURCE_FILES src/aht20.cpp src/main.cpp)
+
 add_executable (${PROJECT_NAME}
-                src/main.cpp)
+                ${SOURCE_FILES})
 
 
 set(CMAKE_SYSTEM_NAME Linux)
