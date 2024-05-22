@@ -1,11 +1,4 @@
 #include <thread>
-#include <system_error>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/ioctl.h>
-#include <linux/i2c-dev.h>
-#include <cstring>
 #include <iostream>
 
 #include "aht20.h"
@@ -13,29 +6,15 @@
 using namespace std::literals::chrono_literals;
 using namespace std;
 
-// unsigned char buffer[60] = {0};
-// uint8_t buffer[2] = {0};
-
 // //----- OPEN THE I2C BUS -----
 // char *filename = (char *)"/dev/i2c-1";
 
 /*--------------------------- Device Status ------------------------------*/
 bool AHT20::begin()
 {
-    _deviceAddress = AHT20_DEFAULT_ADDRESS; // We had hoped the AHT20 would support two addresses but it doesn't seem to
+    _deviceAddress = AHT20_DEFAULT_ADDRESS;
 
-    try
-    {
-        isConnected();
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << e.what() << '\n';
-        return false;
-    }
-
-    // if (isConnected() == false)
-    //     return false;
+    isConnected(_deviceAddress);
 
     // Wait 40 ms after power-on before reading temp or humidity. Datasheet pg 8
     std::this_thread::sleep_for(40ms);
@@ -45,27 +24,6 @@ bool AHT20::begin()
     {
         // Send 0xBE0800
         initialize();
-
-        // Immediately trigger a measurement. Send 0xAC3300
-        triggerMeasurement();
-
-        // Wait for measurement to complete
-        std::this_thread::sleep_for(75ms);
-
-        uint8_t counter = 0;
-        while (isBusy())
-        {
-            std::this_thread::sleep_for(1ms);
-            if (counter++ > 100)
-                return (false); // Give up after 100ms
-        }
-
-        // This calibration sequence is not completely proven. It's not clear how and when the cal bit clears
-        // This seems to work but it's not easily testable
-        if (isCalibrated() == false)
-        {
-            return (false);
-        }
     }
 
     // Check that the cal bit has been set
@@ -77,50 +35,6 @@ bool AHT20::begin()
     sensorQueried.humidity = true;
 
     return true;
-}
-
-bool AHT20::isConnected()
-{
-    fd = open(DEVICE, O_RDWR);
-    if (fd < 0)
-    {
-        throw std::system_error(errno,
-                                std::system_category(),
-                                "Failed to open RTC device");
-    }
-    if (ioctl(fd, I2C_SLAVE, _deviceAddress) < 0)
-    {
-        close(fd);
-        throw std::system_error(errno,
-                                std::system_category(),
-                                "Failed to aquire bus address");
-    }
-
-    // If IC failed to respond, give it 20ms more for Power On Startup
-    // Datasheet pg 7
-    std::this_thread::sleep_for(20ms);
-
-    return true;
-}
-
-void AHT20::writeByte(uint8_t *buff, uint8_t len)
-{
-    if (write(fd, buff, len) != len)
-    {
-        throw std::system_error(errno,
-                                std::system_category(),
-                                "Write to i2c device failed");
-    }
-}
-
-void AHT20::readByte(uint8_t *buff, uint8_t len)
-{
-    if (read(fd, buff, len) != len)
-    {
-        throw std::system_error(errno,
-                                std::system_category(),
-                                "read to i2c device failed");
-    }
 }
 
 /*------------------------ Measurement Helpers ---------------------------*/
@@ -145,10 +59,7 @@ uint8_t AHT20::getStatus()
 // Returns the state of the cal bit in the status byte
 bool AHT20::isCalibrated()
 {
-    auto a = getStatus() & (1 << 3);
-    cout << "isCalibrated: " << a << endl;
-
-    return a;
+    return (getStatus() & (1 << 3));
 }
 
 // Returns the state of the busy bit in the status byte
@@ -175,6 +86,7 @@ void AHT20::triggerMeasurement()
     buff[1] = 0x33;
     buff[2] = 0x00;
     writeByte(buff, 3);
+
     cout << "triggerMeasurement" << endl;
 }
 
