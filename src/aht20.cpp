@@ -14,7 +14,7 @@ bool AHT20::begin()
 {
     _deviceAddress = AHT20_DEFAULT_ADDRESS;
 
-    isConnected(_deviceAddress);
+    connect(_deviceAddress);
 
     // Wait 40 ms after power-on before reading temp or humidity. Datasheet pg 8
     std::this_thread::sleep_for(40ms);

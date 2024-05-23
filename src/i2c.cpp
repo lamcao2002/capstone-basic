@@ -7,7 +7,7 @@
 
 #include "i2c.h"
 
-void I2C::isConnected(uint8_t _deviceAddress)
+void I2C::connect(uint8_t _deviceAddress)
 {
     fd = open(DEVICE, O_RDWR);
     if (fd < 0)
