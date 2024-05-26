@@ -32,7 +32,7 @@ private:
     } sensorQueried;
 
 public:
-    int fd;
+    // int fd;
 
     // Device status
     bool begin();       // Sets the address of the device and opens the I2C bus
