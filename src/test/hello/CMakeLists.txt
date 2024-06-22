@@ -11,8 +11,8 @@ add_executable (${PROJECT_NAME}
 
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR arm)
-SET(CMAKE_CXX_FLAGS "--std=c++11")
-set(CMAKE_CXX_COMPILER /usr/bin/arm-linux-gnueabi-g++)
+# SET(CMAKE_CXX_FLAGS "--std=c++11")
+set(CMAKE_CXX_COMPILER /usr/bin/arm-linux-gnueabihf-g++)
 
 SET_TARGET_PROPERTIES(${PROJECT_NAME}
 	PROPERTIES
